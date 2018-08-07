@@ -11,7 +11,7 @@ import tkinter as tk
 from tkinter.messagebox import showinfo
 
 def popup_showinfo(info):
-	showinfo("Window", str(info))
+	showinfo("Window", str(info))ㄨ
 
 class Application(tk.Frame):
 		
@@ -29,7 +29,7 @@ class Application(tk.Frame):
 			super().__init__(master)
 			self.total_student_num = jstudent[-1]['id']+1
 			master.title("Chosen System")
-#			master.geometry('640x670')
+			master.geometry('640x670')
 			self.create_windows()
 			self.grid()
 
