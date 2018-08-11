@@ -6,6 +6,7 @@ import json
 import string
 import random
 import string
+import pygal
 from tkinter import ttk
 import tkinter as tk
 from tkinter.messagebox import showinfo
@@ -79,7 +80,7 @@ class Application(tk.Frame):
 
 			self.static_buttom = tk.Button(self, text="歷史數據")
 			self.static_buttom["fg"] = "red"
-			self.static_buttom["command"] = self.add_num
+			self.static_buttom["command"] = self.show_static
 			self.static_buttom.grid(column=2, row=0, rowspan=1)
 
 
@@ -96,14 +97,14 @@ class Application(tk.Frame):
 
 
 			self.leave_buttom = tk.Button(self, text="離開")
-			self.leave_buttom["command"] = root.destroy
+			self.leave_buttom["command"] = self.end
 			self.leave_buttom.grid(column=4, row=7)
 
 
 			self.chosing_pool = tk.Text(self, height="10", width="50", 
 				borderwidth=3, relief="solid")
 			self.chosing_pool.config(font=("Courier", 20))
-			self.show_pool()
+			self.showPool()
 			self.chosing_pool.grid(column=0, row=4, columnspan=5)
 
 			self.chosed_pool = tk.Text(self, height="10", width="50", 
@@ -112,7 +113,7 @@ class Application(tk.Frame):
 			self.show_choosed()
 			self.chosed_pool.grid(column=0, row=6, columnspan=5)
 
-		def show_pool(self):
+		def showPool(self):
 			self.chosing_pool.delete(1.0, "end")
 
 			for student in jstudent:
@@ -129,17 +130,22 @@ class Application(tk.Frame):
 					self.chosed_pool.insert('insert'," ")
 			
 		def end(self):
-			self.reset()
-			root.destroy
 
-		def reset(self):
+			self.reset(True)
+			with open ('PickRecord.json','w') as new_file:
+				new_file.write(json.dumps(jstudent))	
+
+			root.destroy()
+
+		def reset(self, is_end=False):
 			self.picked_num = 0
 
 			for student in jstudent:
 				student['picked'] = 0
-				student['temp_picked_time'] = 0
+				if is_end:
+					student['temp_picked_time'] = 0
 
-			self.show_pool()
+			self.showPool()
 			self.show_choosed()
 
 		def add_num(self):
@@ -174,13 +180,12 @@ class Application(tk.Frame):
 			jstudent[self.chosen_one]['temp_picked_time'] += 1
 			jstudent[self.chosen_one]['total_picked_time'] += 1
 			self.num["text"] = jstudent[self.chosen_one]['name']
-			self.show_pool()
+			self.showPool()
 			self.show_choosed()
 
 		def change_mode(self):
 
 			self.cur_mode *= -1
-			self.reset()
 
 			if self.cur_mode == 1:
 				self.mode_string = "模式:抽完不放回"
@@ -189,6 +194,26 @@ class Application(tk.Frame):
 				self.mode_string = "模式:抽完放回"
 
 			self.mode_lab["text"] = self.mode_string
+			self.reset()
+
+		def show_static(self):
+			temp_static =[]
+			total_static = []
+			student_name = []
+
+			for student in jstudent:
+				temp_static.append(student["temp_picked_time"])
+				total_static.append(student["total_picked_time"])
+				student_name.append(student["name"])
+
+			hist = pygal.Bar()
+			hist.title = "抽籤統計表"
+			hist.x_labels = student_name
+			hist.x_title = "名字"
+			hist.y_title = "抽中次數"
+			hist.add("歷史抽中紀錄", total_static)
+			hist.add("當次抽中紀錄", temp_static)
+			hist.render_in_browser()
 
 		def loadStudentFile(self):
 			switch_bit = -1
@@ -253,7 +278,7 @@ class Application(tk.Frame):
 				popup_showinfo("檔案載入成功！")
 
 				
-				self.show_pool()
+				self.showPool()
 				self.show_choosed()
 
 			except:
